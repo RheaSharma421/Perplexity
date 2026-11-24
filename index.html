@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perplexity Explorer</title>
+  <style>
+    /* ==========================================================================
+       CSS STYLES - DEEP FOREST THEME
+       Atmospheric dark woodland, translucent pine canopies, flying birds in motion
+       ========================================================================== */
+    :root {
+      --bg-color: #07150e;
+      --card-bg: rgba(14, 31, 23, 0.82);
+      --card-border: rgba(82, 183, 136, 0.22);
+      --text-main: #e8f5ec;
+      --text-muted: #95b8a3;
+      --border-color: rgba(82, 183, 136, 0.2);
+      --primary: #40916c;
+      --primary-hover: #52b788;
+      --primary-gradient: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #52b788 100%);
+      --accent-forest: #74c69d;
+      --forest-light: rgba(45, 106, 79, 0.3);
+      --forest-border: rgba(116, 198, 157, 0.35);
+      --forest-text: #95d5b2;
+      --success: #52b788;
+      --danger: #ef4444;
+      --danger-bg: rgba(127, 29, 29, 0.35);
+      --danger-border: rgba(239, 68, 68, 0.4);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(ellipse at 50% 15%, #132b20 0%, #091710 60%, #040a07 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 32px 16px;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Forest Background Layer with Animated Trees & Birds */
+    .forest-backdrop {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    /* Misty forest fog/light glow */
+    .forest-fog {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(82, 183, 136, 0.08) 0%, transparent 70%);
+    }
+
+    /* ==========================================================================
+       ANIMATED BIRDS IN MOTION (Translucent, flying smoothly across the sky)
+       ========================================================================== */
+    .bird-flight {
+      position: absolute;
+      top: 0;
+      left: 0;
+      will-change: transform;
+    }
+
+    .bird-svg {
+      width: 48px;
+      height: 24px;
+      overflow: visible;
+    }
+
+    .bird-wing-l,
+    .bird-wing-r {
+      fill: rgba(167, 215, 185, 0.4);
+      transform-origin: 24px 12px;
+    }
+
+    .bird-body {
+      fill: rgba(183, 228, 199, 0.5);
+    }
+
+    /* Bird 1: Mid-altitude glider */
+    .flight-1 {
+      top: 10%;
+      animation: flyAcross1 22s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    }
+    .flight-1 .bird-wing-l {
+      animation: flapLeft 0.8s ease-in-out infinite alternate;
+    }
+    .flight-1 .bird-wing-r {
+      animation: flapRight 0.8s ease-in-out infinite alternate;
+    }
+
+    /* Bird 2: Higher, smaller silhouette in background */
+    .flight-2 {
+      top: 22%;
+      animation: flyAcross2 28s cubic-bezier(0.25, 0.1, 0.25, 1) infinite 6s;
+      transform: scale(0.65);
+      opacity: 0.75;
+    }
+    .flight-2 .bird-wing-l {
+      animation: flapLeft 0.65s ease-in-out infinite alternate 0.2s;
+    }
+    .flight-2 .bird-wing-r {
+      animation: flapRight 0.65s ease-in-out infinite alternate 0.2s;
+    }
+
+    /* Bird 3: Pair bird flying with bird 2 */
+    .flight-3 {
+      top: 26%;
+      animation: flyAcross3 28s cubic-bezier(0.25, 0.1, 0.25, 1) infinite 7.8s;
+      transform: scale(0.55);
+      opacity: 0.65;
+    }
+    .flight-3 .bird-wing-l {
+      animation: flapLeft 0.7s ease-in-out infinite alternate 0.3s;
+    }
+    .flight-3 .bird-wing-r {
+      animation: flapRight 0.7s ease-in-out infinite alternate 0.3s;
+    }
+
+    /* Bird 4: Lower foreground glider */
+    .flight-4 {
+      top: 38%;
+      animation: flyAcross4 19s cubic-bezier(0.25, 0.1, 0.25, 1) infinite 13s;
+      transform: scale(0.85);
+      opacity: 0.85;
+    }
+    .flight-4 .bird-wing-l {
+      animation: flapLeft 0.9s ease-in-out infinite alternate 0.1s;
+    }
+    .flight-4 .bird-wing-r {
+      animation: flapRight 0.9s ease-in-out infinite alternate 0.1s;
+    }
+
+    @keyframes flyAcross1 {
+      0% {
+        transform: translate3d(-10vw, 0, 0) translateY(0);
+      }
+      25% {
+        transform: translate3d(20vw, 0, 0) translateY(12px);
+      }
+      50% {
+        transform: translate3d(50vw, 0, 0) translateY(-8px);
+      }
+      75% {
+        transform: translate3d(80vw, 0, 0) translateY(10px);
+      }
+      100% {
+        transform: translate3d(115vw, 0, 0) translateY(0);
+      }
+    }
+
+    @keyframes flyAcross2 {
+      0% {
+        transform: translate3d(-12vw, 0, 0) translateY(0);
+      }
+      50% {
+        transform: translate3d(50vw, 0, 0) translateY(-15px);
+      }
+      100% {
+        transform: translate3d(115vw, 0, 0) translateY(8px);
+      }
+    }
+
+    @keyframes flyAcross3 {
+      0% {
+        transform: translate3d(-15vw, 0, 0) translateY(5px);
+      }
+      50% {
+        transform: translate3d(48vw, 0, 0) translateY(-12px);
+      }
+      100% {
+        transform: translate3d(115vw, 0, 0) translateY(6px);
+      }
+    }
+
+    @keyframes flyAcross4 {
+      0% {
+        transform: translate3d(-10vw, 0, 0) translateY(0);
+      }
+      35% {
+        transform: translate3d(35vw, 0, 0) translateY(18px);
+      }
+      70% {
+        transform: translate3d(75vw, 0, 0) translateY(-10px);
+      }
+      100% {
+        transform: translate3d(115vw, 0, 0) translateY(5px);
+      }
+    }
+
+    @keyframes flapLeft {
+      0% {
+        transform: rotate(0deg) scaleY(1);
+      }
+      100% {
+        transform: rotate(-35deg) scaleY(0.7);
+      }
+    }
+
+    @keyframes flapRight {
+      0% {
+        transform: rotate(0deg) scaleY(1);
+      }
+      100% {
+        transform: rotate(35deg) scaleY(0.7);
+      }
+    }
+
+    /* ==========================================================================
+       ANIMATED TREES IN MOTION (Translucent pine silhouettes swaying in breeze)
+       ========================================================================== */
+    .tree-layer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .tree-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform-origin: 50% 100%;
+    }
+
+    .tree-layer-distant {
+      height: 320px;
+      opacity: 0.7;
+    }
+
+    .tree-sway-distant {
+      animation: treeSwayDistant 12s ease-in-out infinite alternate;
+    }
+
+    .tree-layer-mid {
+      height: 260px;
+      opacity: 0.85;
+    }
+
+    .tree-sway-mid {
+      animation: treeSwayMid 9s ease-in-out infinite alternate;
+    }
+
+    .tree-layer-fore {
+      height: 200px;
+      opacity: 0.95;
+    }
+
+    .tree-sway-fore {
+      animation: treeSwayFore 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes treeSwayDistant {
+      0% {
+        transform: skewX(0deg) scaleY(1);
+      }
+      50% {
+        transform: skewX(0.8deg) scaleY(1.01);
+      }
+      100% {
+        transform: skewX(-0.6deg) scaleY(0.99);
+      }
+    }
+
+    @keyframes treeSwayMid {
+      0% {
+        transform: skewX(0deg);
+      }
+      50% {
+        transform: skewX(-1.2deg) scaleY(1.02);
+      }
+      100% {
+        transform: skewX(1deg) scaleY(0.98);
+      }
+    }
+
+    @keyframes treeSwayFore {
+      0% {
+        transform: skewX(0deg);
+      }
+      50% {
+        transform: skewX(1.8deg) scaleY(1.02);
+      }
+      100% {
+        transform: skewX(-1.5deg) scaleY(0.98);
+      }
+    }
+
+    /* Tall Background Pine Trees (Rising up both flanks of the viewport) */
+    .tree-layer-tall-left,
+    .tree-layer-tall-right {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 320px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .tree-layer-tall-left {
+      left: 0;
+      opacity: 0.38;
+      transform-origin: 0% 100%;
+      animation: treeSwaySlowL 12s ease-in-out infinite alternate;
+    }
+    .tree-layer-tall-right {
+      right: 0;
+      opacity: 0.38;
+      transform-origin: 100% 100%;
+      animation: treeSwaySlowR 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes treeSwaySlowL {
+      0% { transform: skewX(0deg) scaleY(1); }
+      50% { transform: skewX(0.7deg) scaleY(1.01); }
+      100% { transform: skewX(-0.5deg) scaleY(0.99); }
+    }
+
+    @keyframes treeSwaySlowR {
+      0% { transform: skewX(0deg) scaleY(1); }
+      50% { transform: skewX(-0.6deg) scaleY(1.01); }
+      100% { transform: skewX(0.5deg) scaleY(0.99); }
+    }
+
+    /* ==========================================================================
+       ANIMATED MOVING DEER (Natural original colors & lifelike walking cycle)
+       ========================================================================== */
+    .deer-track {
+      position: absolute;
+      bottom: 15px;
+      left: 0;
+      width: 100%;
+      height: 145px;
+      pointer-events: none;
+      z-index: 2; /* In forest backdrop, walking across the woodland clearing */
+      overflow: hidden;
+    }
+
+    .deer-walker {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      will-change: transform;
+    }
+
+    /* Stag in original rich chestnut coat with branched antlers */
+    .deer-1 {
+      animation: deerWalkAcross1 30s linear infinite;
+      transform: scale(0.95);
+      bottom: 10px;
+    }
+
+    /* Doe/fawn walking behind at a gentle distance */
+    .deer-2 {
+      animation: deerWalkAcross2 35s linear infinite 13s;
+      transform: scale(0.72);
+      bottom: 22px;
+      opacity: 0.95;
+    }
+
+    @keyframes deerWalkAcross1 {
+      0% {
+        transform: translate3d(-180px, 0, 0);
+      }
+      100% {
+        transform: translate3d(calc(100vw + 180px), 0, 0);
+      }
+    }
+
+    @keyframes deerWalkAcross2 {
+      0% {
+        transform: translate3d(-180px, 0, 0);
+      }
+      100% {
+        transform: translate3d(calc(100vw + 180px), 0, 0);
+      }
+    }
+
+    /* Quadruped walking gait for deer legs */
+    .deer-leg-fl {
+      transform-origin: 88px 60px;
+      animation: legSwingFL 1.25s ease-in-out infinite;
+    }
+    .deer-leg-fr {
+      transform-origin: 94px 60px;
+      animation: legSwingFR 1.25s ease-in-out infinite;
+    }
+    .deer-leg-bl {
+      transform-origin: 50px 60px;
+      animation: legSwingBL 1.25s ease-in-out infinite;
+    }
+    .deer-leg-br {
+      transform-origin: 44px 60px;
+      animation: legSwingBR 1.25s ease-in-out infinite;
+    }
+
+    @keyframes legSwingFR {
+      0% { transform: rotate(-22deg); }
+      25% { transform: rotate(0deg) translateY(-3px); }
+      50% { transform: rotate(24deg); }
+      75% { transform: rotate(5deg); }
+      100% { transform: rotate(-22deg); }
+    }
+
+    @keyframes legSwingFL {
+      0% { transform: rotate(24deg); }
+      25% { transform: rotate(5deg); }
+      50% { transform: rotate(-22deg); }
+      75% { transform: rotate(0deg) translateY(-3px); }
+      100% { transform: rotate(24deg); }
+    }
+
+    @keyframes legSwingBR {
+      0% { transform: rotate(22deg); }
+      25% { transform: rotate(0deg); }
+      50% { transform: rotate(-20deg) translateY(-4px); }
+      75% { transform: rotate(-6deg); }
+      100% { transform: rotate(22deg); }
+    }
+
+    @keyframes legSwingBL {
+      0% { transform: rotate(-20deg) translateY(-4px); }
+      25% { transform: rotate(-6deg); }
+      50% { transform: rotate(22deg); }
+      75% { transform: rotate(0deg); }
+      100% { transform: rotate(-20deg) translateY(-4px); }
+    }
+
+    .deer-body-torso {
+      animation: deerTorsoBob 0.625s ease-in-out infinite alternate;
+    }
+
+    .deer-head-antlers {
+      transform-origin: 92px 60px;
+      animation: deerHeadBob 1.25s ease-in-out infinite alternate;
+    }
+
+    @keyframes deerTorsoBob {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-3.5px); }
+    }
+
+    @keyframes deerHeadBob {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(-3deg) translateY(-1px); }
+      100% { transform: rotate(2.5deg); }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a7d7b9 0%, #74c69d 45%, #d8f3dc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #e8f5ec;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Badges */
+    .badge-simulated {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(217, 119, 6, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Form Controls */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      color: var(--text-main);
+      background: rgba(9, 23, 16, 0.75);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent-forest);
+      box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.25);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(45, 106, 79, 0.45);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(82, 183, 136, 0.4);
+    }
+
+    .btn-outline {
+      background: rgba(27, 67, 50, 0.35);
+      color: #a7d7b9;
+      border: 1px solid rgba(82, 183, 136, 0.3);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: rgba(45, 106, 79, 0.55);
+      border-color: var(--accent-forest);
+      color: #d8f3dc;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    .btn-remove {
+      background: rgba(127, 29, 29, 0.4);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .btn-remove:hover:not(:disabled) {
+      background: rgba(185, 28, 28, 0.5);
+    }
+
+    /* Samples & Presets bar */
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .button-row-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+
+    /* Status line */
+    .status-line {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-line.status-ready {
+      color: #74c69d;
+      font-weight: 600;
+    }
+
+    .status-line.status-loading {
+      color: #52b788;
+      font-weight: 600;
+    }
+
+    .error-banner {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: #fca5a5;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      margin-top: 14px;
+      display: none;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: rgba(7, 19, 13, 0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    thead th {
+      background: rgba(27, 67, 50, 0.55);
+      color: #b7e4c7;
+      padding: 10px 14px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(45, 106, 79, 0.25);
+    }
+
+    .token-badge {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: var(--forest-light);
+      color: var(--forest-text);
+      border: 1px solid var(--forest-border);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* Calculation Steps */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .step-box {
+      background: rgba(10, 24, 17, 0.75);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .step-box-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #74c69d;
+      margin-bottom: 8px;
+    }
+
+    .step-box-content {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    .step-formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .perplexity-value-large {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #52b788;
+      line-height: 1.1;
+      margin-top: 4px;
+      text-shadow: 0 0 20px rgba(82, 183, 136, 0.35);
+    }
+
+    .perplexity-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Predictions Bar Chart (Section 3) */
+    .predictions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pred-row {
+      display: grid;
+      grid-template-columns: 32px 110px 1fr 65px;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(11, 26, 19, 0.7);
+      border: 1px solid var(--border-color);
+      transition: transform 0.1s ease;
+    }
+
+    .pred-row.top-prediction {
+      background: rgba(45, 106, 79, 0.4);
+      border-color: #52b788;
+      box-shadow: 0 0 14px rgba(82, 183, 136, 0.25);
+    }
+
+    .pred-rank {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .pred-row.top-prediction .pred-rank {
+      color: #74c69d;
+    }
+
+    .pred-token {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pred-bar-track {
+      background: rgba(255, 255, 255, 0.08);
+      height: 10px;
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pred-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: #40916c;
+      transition: width 0.3s ease;
+    }
+
+    .pred-row.top-prediction .pred-bar-fill {
+      background: linear-gradient(90deg, #2d6a4f, #74c69d);
+    }
+
+    .pred-pct {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: right;
+      color: var(--text-main);
+    }
+
+    .pred-row.top-prediction .pred-pct {
+      color: #95d5b2;
+    }
+
+    /* Section 4 manual rows */
+    .manual-rows-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .manual-row {
+      display: grid;
+      grid-template-columns: 1fr 140px auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 500px) {
+      .manual-row {
+        grid-template-columns: 1fr 100px auto;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Utility */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(82, 183, 136, 0.3);
+      border-top-color: var(--accent-forest);
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Forest Backdrop: Animated Translucent Trees & Birds in Motion -->
+  <div class="forest-backdrop" aria-hidden="true">
+    <div class="forest-fog"></div>
+
+    <!-- Birds in motion with subtle transparency (gliding across the forest sky) -->
+    <div class="bird-flight flight-1">
+      <svg class="bird-svg" viewBox="0 0 48 24">
+        <path class="bird-wing-l" d="M24 12 Q12 2 2 8 Q12 14 24 12 Z" />
+        <path class="bird-wing-r" d="M24 12 Q36 2 46 8 Q36 14 24 12 Z" />
+        <ellipse class="bird-body" cx="24" cy="12" rx="3.5" ry="2" />
+      </svg>
+    </div>
+    <div class="bird-flight flight-2">
+      <svg class="bird-svg" viewBox="0 0 48 24">
+        <path class="bird-wing-l" d="M24 12 Q12 2 2 8 Q12 14 24 12 Z" />
+        <path class="bird-wing-r" d="M24 12 Q36 2 46 8 Q36 14 24 12 Z" />
+        <ellipse class="bird-body" cx="24" cy="12" rx="3.5" ry="2" />
+      </svg>
+    </div>
+    <div class="bird-flight flight-3">
+      <svg class="bird-svg" viewBox="0 0 48 24">
+        <path class="bird-wing-l" d="M24 12 Q12 2 2 8 Q12 14 24 12 Z" />
+        <path class="bird-wing-r" d="M24 12 Q36 2 46 8 Q36 14 24 12 Z" />
+        <ellipse class="bird-body" cx="24" cy="12" rx="3.5" ry="2" />
+      </svg>
+    </div>
+    <div class="bird-flight flight-4">
+      <svg class="bird-svg" viewBox="0 0 48 24">
+        <path class="bird-wing-l" d="M24 12 Q12 2 2 8 Q12 14 24 12 Z" />
+        <path class="bird-wing-r" d="M24 12 Q36 2 46 8 Q36 14 24 12 Z" />
+        <ellipse class="bird-body" cx="24" cy="12" rx="3.5" ry="2" />
+      </svg>
+    </div>
+
+    <!-- Layer 1: Distant Misty Pine Trees with Transparency & Gentle Sway -->
+    <div class="tree-layer tree-layer-distant">
+      <svg class="tree-svg tree-sway-distant" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="distantTreeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#40916c" stop-opacity="0.18" />
+            <stop offset="60%" stop-color="#1b4332" stop-opacity="0.12" />
+            <stop offset="100%" stop-color="#081c15" stop-opacity="0.04" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#distantTreeGrad)" d="M0,320 L0,180 L20,130 L40,180 L70,110 L100,180 L130,140 L160,190 L190,120 L220,185 L260,95 L300,190 L340,130 L380,180 L420,105 L460,190 L500,135 L540,185 L590,90 L640,190 L680,140 L720,180 L770,100 L820,190 L870,125 L920,185 L960,110 L1000,180 L1050,95 L1100,190 L1150,130 L1200,185 L1250,115 L1300,180 L1350,135 L1400,185 L1440,150 L1440,320 Z"/>
+      </svg>
+    </div>
+
+    <!-- Layer 2: Mid-ground Pine Forest with Transparency & Gentle Sway -->
+    <div class="tree-layer tree-layer-mid">
+      <svg class="tree-svg tree-sway-mid" viewBox="0 0 1440 260" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="midTreeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2d6a4f" stop-opacity="0.28" />
+            <stop offset="60%" stop-color="#1b4332" stop-opacity="0.20" />
+            <stop offset="100%" stop-color="#05120d" stop-opacity="0.08" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#midTreeGrad)" d="M0,260 L0,150 L15,130 L25,100 L35,130 L50,110 L65,60 L80,110 L95,135 L120,90 L145,140 L180,50 L215,140 L250,100 L285,145 L320,70 L355,150 L390,105 L430,45 L470,115 L510,65 L550,145 L600,55 L650,150 L700,85 L750,155 L800,40 L850,150 L900,95 L950,145 L1000,60 L1050,155 L1110,75 L1170,150 L1230,45 L1290,155 L1350,85 L1410,150 L1440,110 L1440,260 Z"/>
+      </svg>
+    </div>
+
+    <!-- Tall Background Trees Flanking Left and Right -->
+    <div class="tree-layer-tall-left">
+      <svg viewBox="0 0 320 900" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+        <defs>
+          <linearGradient id="tallTreeGradL" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2d6a4f" stop-opacity="0.28" />
+            <stop offset="60%" stop-color="#1b4332" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#07150e" stop-opacity="0.05" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#tallTreeGradL)" d="M 0,0 L 40,30 L 10,70 L 60,110 L 20,160 L 80,210 L 30,270 L 110,330 L 40,400 L 130,470 L 50,550 L 150,630 L 60,720 L 170,810 L 80,900 L 0,900 Z" />
+        <path fill="url(#tallTreeGradL)" opacity="0.75" d="M 0,120 L 70,160 L 30,210 L 90,260 L 40,320 L 120,380 L 50,450 L 140,520 L 60,600 L 160,680 L 70,770 L 180,860 L 0,900 Z" />
+        <rect x="25" y="0" width="16" height="900" fill="#0f291e" opacity="0.28" />
+      </svg>
+    </div>
+
+    <div class="tree-layer-tall-right">
+      <svg viewBox="0 0 320 900" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+        <defs>
+          <linearGradient id="tallTreeGradR" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2d6a4f" stop-opacity="0.28" />
+            <stop offset="60%" stop-color="#1b4332" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#07150e" stop-opacity="0.05" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#tallTreeGradR)" d="M 320,0 L 280,30 L 310,70 L 260,110 L 300,160 L 240,210 L 290,270 L 210,330 L 280,400 L 190,470 L 270,550 L 170,630 L 260,720 L 150,810 L 240,900 L 320,900 Z" />
+        <path fill="url(#tallTreeGradR)" opacity="0.75" d="M 320,120 L 250,160 L 290,210 L 230,260 L 280,320 L 200,380 L 270,450 L 180,520 L 260,600 L 160,680 L 250,770 L 140,860 L 320,900 Z" />
+        <rect x="279" y="0" width="16" height="900" fill="#0f291e" opacity="0.28" />
+      </svg>
+    </div>
+
+    <!-- Animated Moving Deer in Original Natural Colors -->
+    <div class="deer-track" aria-hidden="true">
+      <!-- Deer 1: Stag with Branched Antlers in Original Colors -->
+      <div class="deer-walker deer-1">
+        <svg viewBox="0 0 140 120" width="140" height="120">
+          <defs>
+            <linearGradient id="deerCoat1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#cf7b3c" />
+              <stop offset="55%" stop-color="#b05b25" />
+              <stop offset="100%" stop-color="#7a3710" />
+            </linearGradient>
+            <linearGradient id="deerBelly1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fffcf7" />
+              <stop offset="100%" stop-color="#ebd8c6" />
+            </linearGradient>
+            <linearGradient id="antlerGrad1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#d4af86" />
+              <stop offset="100%" stop-color="#8a5b32" />
+            </linearGradient>
+          </defs>
+
+          <!-- Back Far Leg (darker shaded) -->
+          <g class="deer-leg-bl">
+            <path d="M 52 58 Q 50 78 54 94 Q 56 102 54 112 L 48 112 Q 47 100 45 84 Q 45 70 47 58 Z" fill="#662c0b" />
+            <polygon points="48,110 54,110 53,114 47,114" fill="#201108" />
+          </g>
+
+          <!-- Front Far Leg (darker shaded) -->
+          <g class="deer-leg-fl">
+            <path d="M 88 58 Q 86 78 88 94 Q 89 104 88 112 L 83 112 Q 82 102 81 92 Q 80 74 83 58 Z" fill="#662c0b" />
+            <polygon points="83,110 88,110 88,114 82,114" fill="#201108" />
+          </g>
+
+          <!-- Torso, Tail, Head & Antlers -->
+          <g class="deer-body-torso">
+            <!-- Tail with white underside -->
+            <path d="M 33 46 Q 24 50 26 56 Q 30 58 35 52 Z" fill="#cf7b3c" />
+            <path d="M 32 50 Q 25 54 28 57 Q 31 58 34 53 Z" fill="#ffffff" />
+
+            <!-- Body / Flank -->
+            <path d="M 34 46 Q 32 58 36 68 Q 44 74 62 73 Q 82 72 96 66 Q 102 58 98 48 Q 85 43 62 44 Q 45 44 34 46 Z" fill="url(#deerCoat1)" />
+            
+            <!-- Cream Underbelly & Chest patch -->
+            <path d="M 44 68 Q 62 74 80 71 Q 92 68 95 62 Q 90 67 76 68 Q 58 68 44 68 Z" fill="url(#deerBelly1)" />
+            <path d="M 32 50 Q 36 62 42 66 Q 38 58 34 46 Z" fill="#ffffff" opacity="0.9" />
+
+            <!-- Head & Neck -->
+            <g class="deer-head-antlers">
+              <!-- Neck -->
+              <path d="M 88 52 Q 95 38 102 24 Q 108 26 110 32 Q 106 48 96 64 Z" fill="url(#deerCoat1)" />
+              <path d="M 94 44 Q 102 34 105 26 Q 107 36 98 56 Z" fill="url(#deerBelly1)" opacity="0.85" />
+
+              <!-- Head -->
+              <path d="M 98 25 Q 105 18 116 20 Q 124 23 126 27 Q 120 31 113 32 Q 105 32 98 25 Z" fill="#cf7b3c" />
+              <!-- Cream Muzzle -->
+              <path d="M 118 22 Q 125 24 126 27 Q 122 30 117 31 Z" fill="#fffcf7" />
+              <!-- Dark nose -->
+              <ellipse cx="125" cy="26" rx="2" ry="1.5" fill="#201108" />
+              <!-- Eye -->
+              <ellipse cx="111" cy="23" rx="2" ry="2.2" fill="#180c05" />
+              <circle cx="111.6" cy="22.3" r="0.7" fill="#ffffff" />
+              <!-- Ear -->
+              <path d="M 100 22 Q 92 14 96 11 Q 103 14 102 21 Z" fill="#b05b25" />
+              <path d="M 98 20 Q 94 14 97 13 Q 101 16 100 20 Z" fill="#fffcf7" />
+
+              <!-- Branched Antlers in Original Tan/Bone Colors -->
+              <g class="deer-antler-group">
+                <!-- Main beam -->
+                <path d="M 104 18 Q 106 8 112 0 Q 114 4 110 12 Q 108 17 106 18 Z" fill="url(#antlerGrad1)" />
+                <!-- Brow tine -->
+                <path d="M 106 15 Q 112 12 116 13 Q 112 15 107 17 Z" fill="url(#antlerGrad1)" />
+                <!-- Point tine -->
+                <path d="M 108 9 Q 116 6 119 8 Q 114 10 109 11 Z" fill="url(#antlerGrad1)" />
+                <!-- Back tine -->
+                <path d="M 105 12 Q 100 6 101 2 Q 103 6 106 10 Z" fill="url(#antlerGrad1)" />
+
+                <!-- Far antler (shaded for depth) -->
+                <path d="M 100 17 Q 98 7 104 1 Q 105 4 102 11 Q 101 16 100 17 Z" fill="#8a5b32" opacity="0.85" />
+                <path d="M 101 13 Q 106 11 110 12 Q 106 14 102 15 Z" fill="#8a5b32" opacity="0.85" />
+              </g>
+            </g>
+          </g>
+
+          <!-- Back Near Leg (natural chestnut, full light) -->
+          <g class="deer-leg-br">
+            <path d="M 44 58 Q 38 72 44 88 Q 48 98 46 112 L 40 112 Q 38 100 37 84 Q 35 68 40 56 Z" fill="url(#deerCoat1)" />
+            <polygon points="40,110 46,110 45,114 39,114" fill="#201108" />
+          </g>
+
+          <!-- Front Near Leg (natural chestnut, full light) -->
+          <g class="deer-leg-fr">
+            <path d="M 94 58 Q 96 74 93 92 Q 91 102 93 112 L 87 112 Q 86 102 87 90 Q 89 74 91 58 Z" fill="url(#deerCoat1)" />
+            <polygon points="87,110 93,110 92,114 86,114" fill="#201108" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Deer 2: Doe / Fawn Following with Natural Fawn Markings -->
+      <div class="deer-walker deer-2">
+        <svg viewBox="0 0 140 120" width="140" height="120">
+          <defs>
+            <linearGradient id="deerCoat2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d68448" />
+              <stop offset="60%" stop-color="#b8632c" />
+              <stop offset="100%" stop-color="#833d13" />
+            </linearGradient>
+          </defs>
+
+          <!-- Far Legs -->
+          <g class="deer-leg-bl">
+            <path d="M 52 58 Q 50 78 54 94 Q 56 102 54 112 L 48 112 Q 47 100 45 84 Q 45 70 47 58 Z" fill="#662c0b" />
+            <polygon points="48,110 54,110 53,114 47,114" fill="#201108" />
+          </g>
+          <g class="deer-leg-fl">
+            <path d="M 88 58 Q 86 78 88 94 Q 89 104 88 112 L 83 112 Q 82 102 81 92 Q 80 74 83 58 Z" fill="#662c0b" />
+            <polygon points="83,110 88,110 88,114 82,114" fill="#201108" />
+          </g>
+
+          <!-- Torso & Sleek Doe Head -->
+          <g class="deer-body-torso">
+            <path d="M 33 46 Q 24 50 26 56 Q 30 58 35 52 Z" fill="#d68448" />
+            <path d="M 32 50 Q 25 54 28 57 Q 31 58 34 53 Z" fill="#ffffff" />
+            <path d="M 34 46 Q 32 58 36 68 Q 44 74 62 73 Q 82 72 96 66 Q 102 58 98 48 Q 85 43 62 44 Q 45 44 34 46 Z" fill="url(#deerCoat2)" />
+            <!-- Soft fawn spots -->
+            <circle cx="50" cy="50" r="1.5" fill="#fffaf0" opacity="0.8" />
+            <circle cx="58" cy="52" r="1.5" fill="#fffaf0" opacity="0.8" />
+            <circle cx="68" cy="51" r="1.5" fill="#fffaf0" opacity="0.8" />
+            <circle cx="78" cy="53" r="1.5" fill="#fffaf0" opacity="0.8" />
+            <circle cx="62" cy="56" r="1.5" fill="#fffaf0" opacity="0.7" />
+            
+            <path d="M 44 68 Q 62 74 80 71 Q 92 68 95 62 Q 90 67 76 68 Q 58 68 44 68 Z" fill="#fffcf7" />
+            <path d="M 32 50 Q 36 62 42 66 Q 38 58 34 46 Z" fill="#ffffff" opacity="0.9" />
+
+            <g class="deer-head-antlers">
+              <path d="M 88 52 Q 95 38 102 24 Q 108 26 110 32 Q 106 48 96 64 Z" fill="url(#deerCoat2)" />
+              <path d="M 94 44 Q 102 34 105 26 Q 107 36 98 56 Z" fill="#fffcf7" opacity="0.85" />
+              <path d="M 98 25 Q 105 18 116 20 Q 124 23 126 27 Q 120 31 113 32 Q 105 32 98 25 Z" fill="#d68448" />
+              <path d="M 118 22 Q 125 24 126 27 Q 122 30 117 31 Z" fill="#fffcf7" />
+              <ellipse cx="125" cy="26" rx="2" ry="1.5" fill="#201108" />
+              <ellipse cx="111" cy="23" rx="2" ry="2.2" fill="#180c05" />
+              <circle cx="111.6" cy="22.3" r="0.7" fill="#ffffff" />
+              <!-- Ears -->
+              <path d="M 100 22 Q 92 13 96 10 Q 103 13 102 21 Z" fill="#b8632c" />
+              <path d="M 98 20 Q 94 14 97 12 Q 101 15 100 20 Z" fill="#fffcf7" />
+            </g>
+          </g>
+
+          <!-- Near Legs -->
+          <g class="deer-leg-br">
+            <path d="M 44 58 Q 38 72 44 88 Q 48 98 46 112 L 40 112 Q 38 100 37 84 Q 35 68 40 56 Z" fill="url(#deerCoat2)" />
+            <polygon points="40,110 46,110 45,114 39,114" fill="#201108" />
+          </g>
+          <g class="deer-leg-fr">
+            <path d="M 94 58 Q 96 74 93 92 Q 91 102 93 112 L 87 112 Q 86 102 87 90 Q 89 74 91 58 Z" fill="url(#deerCoat2)" />
+            <polygon points="87,110 93,110 92,114 86,114" fill="#201108" />
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Layer 3: Foreground Canopy with Translucent Organic Silhouettes -->
+    <div class="tree-layer tree-layer-fore">
+      <svg class="tree-svg tree-sway-fore" viewBox="0 0 1440 200" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="foreTreeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1b4332" stop-opacity="0.36" />
+            <stop offset="70%" stop-color="#0e231b" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#040c08" stop-opacity="0.10" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#foreTreeGrad)" d="M0,200 L0,80 L30,110 L60,30 L90,110 L130,60 L170,120 L220,20 L270,130 L340,65 L410,135 L500,15 L580,140 L670,55 L760,145 L850,25 L940,140 L1040,40 L1130,145 L1230,20 L1330,140 L1400,60 L1440,120 L1440,200 Z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>Perplexity Explorer</h1>
+      <p>An interactive, beginner-friendly tool to understand how language models calculate probability and perplexity.</p>
+    </header>
+
+    <!-- ====================================================================
+         SECTION 1: TYPE A SENTENCE
+         ==================================================================== -->
+    <section class="card" id="section-1">
+      <h2 class="section-title">Section 1 – Type a sentence</h2>
+      
+      <div class="button-row">
+        <span class="button-row-label">Try sample:</span>
+        <button type="button" class="btn btn-outline" id="sample-1">“I love Python”</button>
+        <button type="button" class="btn btn-outline" id="sample-2">“Python love I”</button>
+        <button type="button" class="btn btn-outline" id="sample-3">“The capital of France is Paris”</button>
+      </div>
+
+      <div class="input-group">
+        <input type="text" id="sentence-input" value="I love Python" placeholder="Type a sentence here...">
+      </div>
+
+      <div>
+        <button type="button" class="btn btn-primary" id="btn-calculate">
+          <span id="btn-calc-text">Calculate perplexity</span>
+        </button>
+      </div>
+
+      <!-- Status line -->
+      <div class="status-line" id="status-line">
+        Click "Calculate perplexity" to load the in-browser model and compute probabilities.
+      </div>
+
+      <!-- Red error banner shown only if loading fails -->
+      <div class="error-banner" id="error-banner"></div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 2: PROBABILITY OF EACH TOKEN -> PERPLEXITY
+         ==================================================================== -->
+    <section class="card" id="section-2">
+      <h2 class="section-title">Section 2 – Probability of each token → perplexity</h2>
+      
+      <div id="section-2-placeholder" class="empty-state">
+        Model output will appear here once you calculate perplexity for a sentence.
+      </div>
+
+      <div id="section-2-content" style="display: none;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>Token</th>
+                <th>Probability P</th>
+                <th>1/P (Surprisal)</th>
+              </tr>
+            </thead>
+            <tbody id="token-table-body">
+              <!-- Token rows injected dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Three Steps Breakdown -->
+        <div class="steps-grid">
+          <!-- Step 1 -->
+          <div class="step-box">
+            <div>
+              <div class="step-box-header">Step 1: Multiply 1/P Values</div>
+              <div class="step-formula">Product = ∏ (1 / P)</div>
+              <div class="step-box-content" id="step-1-multiplication"></div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-box">
+            <div>
+              <div class="step-box-header">Step 2: Number of Tokens</div>
+              <div class="step-formula">N = sequence length</div>
+              <div class="step-box-content" id="step-2-tokens"></div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-box">
+            <div>
+              <div class="step-box-header">Step 3: Perplexity</div>
+              <div class="step-formula">Perplexity = (Product)<sup>1/N</sup></div>
+              <div class="perplexity-value-large" id="step-3-perplexity">--</div>
+              <div class="perplexity-note">Computed stably via exp(average of −ln P).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 3: WHAT DOES THE MODEL PREDICT NEXT?
+         ==================================================================== -->
+    <section class="card" id="section-3">
+      <h2 class="section-title">Section 3 – What does the model predict next?</h2>
+      
+      <div id="section-3-placeholder" class="empty-state">
+        Next-token predictions will appear here after running the model.
+      </div>
+
+      <div id="section-3-content" style="display: none;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">
+          Using the model's logits at the final position, here are the top 8 most likely tokens to follow your sentence:
+        </p>
+        <div class="predictions-list" id="predictions-list">
+          <!-- Prediction bars injected dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 4: TRY IT BY HAND (SIMULATED)
+         ==================================================================== -->
+    <section class="card" id="section-4">
+      <div class="section-title">
+        <span>Section 4 – Try it by hand</span>
+        <span class="badge-simulated">Simulated, not from the model</span>
+      </div>
+
+      <div class="button-row">
+        <span class="button-row-label">Presets:</span>
+        <button type="button" class="btn btn-outline" id="preset-python">“I love Python” (0.5, 0.8, 0.2)</button>
+        <button type="button" class="btn btn-outline" id="preset-eighths">“All 1/8” (8 tokens at 0.125)</button>
+        <button type="button" class="btn btn-outline" id="preset-surprise">“One surprising word” (0.9, 0.9, 0.9, 0.01)</button>
+      </div>
+
+      <!-- Editable manual token rows -->
+      <div class="manual-rows-container" id="manual-rows-container">
+        <!-- Input rows dynamically injected here -->
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-add-token">+ Add token</button>
+      </div>
+
+      <!-- Live Calculation for Section 4 -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px;">#</th>
+              <th>Token</th>
+              <th>Probability P</th>
+              <th>1/P (Surprisal)</th>
+            </tr>
+          </thead>
+          <tbody id="manual-table-body">
+            <!-- Manual table rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Three Steps for Section 4 -->
+      <div class="steps-grid">
+        <div class="step-box">
+          <div>
+            <div class="step-box-header">Step 1: Multiply 1/P Values</div>
+            <div class="step-formula">Product = ∏ (1 / P)</div>
+            <div class="step-box-content" id="manual-step-1"></div>
+          </div>
+        </div>
+
+        <div class="step-box">
+          <div>
+            <div class="step-box-header">Step 2: Number of Tokens</div>
+            <div class="step-formula">N = sequence length</div>
+            <div class="step-box-content" id="manual-step-2"></div>
+          </div>
+        </div>
+
+        <div class="step-box">
+          <div>
+            <div class="step-box-header">Step 3: Perplexity</div>
+            <div class="step-formula">Perplexity = (Product)<sup>1/N</sup></div>
+            <div class="perplexity-value-large" id="manual-step-3">--</div>
+            <div class="perplexity-note">Computed stably via exp(average of −ln P).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====================================================================
+       JAVASCRIPT MODULE
+       Loads Transformers.js, runs distilgpt2 in-browser, computes perplexity
+       ==================================================================== -->
+  <script type="module">
+    // Import Transformers.js directly from CDN as required
+    import { AutoTokenizer, AutoModelForCausalLM, Tensor } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3";
+
+    // -------------------------------------------------------------------------
+    // Global state for model & tokenizer (lazy-loaded on first user click)
+    // -------------------------------------------------------------------------
+    let tokenizer = null;
+    let model = null;
+    let isModelLoading = false;
+
+    // DistilGPT-2 start / end-of-text marker
+    const START_TOKEN_ID = 50256;
+
+    // DOM Elements for Section 1, 2, 3
+    const sentenceInput = document.getElementById("sentence-input");
+    const btnCalculate = document.getElementById("btn-calculate");
+    const btnCalcText = document.getElementById("btn-calc-text");
+    const statusLine = document.getElementById("status-line");
+    const errorBanner = document.getElementById("error-banner");
+
+    const section2Placeholder = document.getElementById("section-2-placeholder");
+    const section2Content = document.getElementById("section-2-content");
+    const tokenTableBody = document.getElementById("token-table-body");
+    const step1El = document.getElementById("step-1-multiplication");
+    const step2El = document.getElementById("step-2-tokens");
+    const step3El = document.getElementById("step-3-perplexity");
+
+    const section3Placeholder = document.getElementById("section-3-placeholder");
+    const section3Content = document.getElementById("section-3-content");
+    const predictionsList = document.getElementById("predictions-list");
+
+    // -------------------------------------------------------------------------
+    // Helper: Update status message
+    // -------------------------------------------------------------------------
+    function updateStatus(message, type = "normal") {
+      statusLine.className = "status-line";
+      if (type === "loading") {
+        statusLine.classList.add("status-loading");
+        statusLine.innerHTML = `<span class="spinner"></span> ${message}`;
+      } else if (type === "ready") {
+        statusLine.classList.add("status-ready");
+        statusLine.innerHTML = `✓ ${message}`;
+      } else {
+        statusLine.textContent = message;
+      }
+    }
+
+    // Helper: Display red error message
+    function showError(message) {
+      errorBanner.style.display = "block";
+      errorBanner.textContent = `Error: ${message}`;
+      updateStatus("Failed to run model.", "normal");
+    }
+
+    function clearError() {
+      errorBanner.style.display = "none";
+      errorBanner.textContent = "";
+    }
+
+    // -------------------------------------------------------------------------
+    // Stable Softmax
+    // Subtracting the maximum logit first prevents numerical overflow (exp(huge) = Infinity)
+    // -------------------------------------------------------------------------
+    function computeSoftmax(logitsArray) {
+      let maxVal = -Infinity;
+      for (let i = 0; i < logitsArray.length; i++) {
+        if (logitsArray[i] > maxVal) maxVal = logitsArray[i];
+      }
+      let sumExp = 0;
+      const exps = new Float32Array(logitsArray.length);
+      for (let i = 0; i < logitsArray.length; i++) {
+        const val = Math.exp(logitsArray[i] - maxVal);
+        exps[i] = val;
+        sumExp += val;
+      }
+      return { exps, sumExp, maxVal };
+    }
+
+    // -------------------------------------------------------------------------
+    // Format token for display (replacing spaces with ␣)
+    // -------------------------------------------------------------------------
+    function formatDisplayToken(rawStr) {
+      if (!rawStr || rawStr.length === 0) return "␣";
+      // Replace visible spaces with ␣ and newlines with ↵
+      return rawStr.replace(/ /g, "␣").replace(/\n/g, "↵");
+    }
+
+    // -------------------------------------------------------------------------
+    // Lazy load the model on first button click
+    // -------------------------------------------------------------------------
+    async function ensureModelLoaded() {
+      if (model && tokenizer) return;
+
+      isModelLoading = true;
+      btnCalculate.disabled = true;
+      clearError();
+      updateStatus("Downloading the model… (this happens once, ~85MB)", "loading");
+
+      try {
+        // Load tokenizer
+        tokenizer = await AutoTokenizer.from_pretrained("Xenova/distilgpt2", {
+          progress_callback: (info) => {
+            if (info.status === "progress" && typeof info.progress === "number") {
+              updateStatus(`Downloading the model… ${Math.round(info.progress)}%`, "loading");
+            }
+          }
+        });
+
+        // Load causal LM with q8 quantization for fast in-browser inference
+        model = await AutoModelForCausalLM.from_pretrained("Xenova/distilgpt2", {
+          dtype: "q8",
+          progress_callback: (info) => {
+            if (info.status === "progress" && typeof info.progress === "number") {
+              updateStatus(`Downloading the model… ${Math.round(info.progress)}%`, "loading");
+            }
+          }
+        });
+
+        updateStatus("Model ready.", "ready");
+      } catch (err) {
+        tokenizer = null;
+        model = null;
+        showError(err.message || "Failed to load Xenova/distilgpt2. Please check your network connection.");
+        throw err;
+      } finally {
+        isModelLoading = false;
+        btnCalculate.disabled = false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Run Model & Calculate Perplexity (Sections 1, 2, 3)
+    // -------------------------------------------------------------------------
+    async function calculateModelPerplexity() {
+      const sentence = sentenceInput.value.trim();
+      if (!sentence) {
+        alert("Please enter a sentence first.");
+        return;
+      }
+
+      try {
+        clearError();
+        // 1. Ensure model is downloaded and ready
+        await ensureModelLoaded();
+
+        updateStatus("Calculating perplexity with DistilGPT-2...", "loading");
+        btnCalculate.disabled = true;
+
+        // 2. Tokenize sentence
+        const encoded = await tokenizer.encode(sentence);
+        const sentenceTokenIds = Array.isArray(encoded) ? encoded : Array.from(encoded);
+
+        if (sentenceTokenIds.length === 0) {
+          updateStatus("No tokens found for the input sentence.", "normal");
+          btnCalculate.disabled = false;
+          return;
+        }
+
+        // Prepend start token (50256: <|endoftext|>) so position 0 predicts the first word
+        const allTokenIds = [START_TOKEN_ID, ...sentenceTokenIds];
+        const numTokens = sentenceTokenIds.length; // N = number of real tokens
+
+        // 3. Prepare Tensor inputs: shape [1, sequence_length]
+        // ONNX DistilGPT-2 requires input_ids, attention_mask, and position_ids
+        const seqLen = allTokenIds.length;
+        const inputTensor = new Tensor(
+          "int64",
+          BigInt64Array.from(allTokenIds.map((id) => BigInt(id))),
+          [1, seqLen]
+        );
+        const attentionMaskTensor = new Tensor(
+          "int64",
+          new BigInt64Array(seqLen).fill(1n),
+          [1, seqLen]
+        );
+        const positionIdsTensor = new Tensor(
+          "int64",
+          BigInt64Array.from({ length: seqLen }, (_, i) => BigInt(i)),
+          [1, seqLen]
+        );
+
+        // 4. Run model once on all token IDs with required inputs
+        const outputs = await model({
+          input_ids: inputTensor,
+          attention_mask: attentionMaskTensor,
+          position_ids: positionIdsTensor
+        });
+        const logits = outputs.logits; // shape [1, seq_len, vocab_size]
+        const vocabSize = logits.dims[2];
+        const logitsData = logits.data; // Float32Array
+
+        // 5. Compute probability for each real token
+        // Token at position i in sentenceTokenIds has target ID = allTokenIds[i + 1]
+        // Its logits are at position i (the position just before it)
+        const tokenDetails = [];
+        let sumNegLogP = 0;
+
+        for (let i = 0; i < numTokens; i++) {
+          const targetId = allTokenIds[i + 1];
+          const offset = i * vocabSize;
+          const slice = logitsData.subarray(offset, offset + vocabSize);
+
+          // Stable Softmax
+          let maxLogit = -Infinity;
+          for (let v = 0; v < vocabSize; v++) {
+            if (slice[v] > maxLogit) maxLogit = slice[v];
+          }
+          let sumExp = 0;
+          for (let v = 0; v < vocabSize; v++) {
+            sumExp += Math.exp(slice[v] - maxLogit);
+          }
+
+          const targetLogit = slice[targetId];
+          const prob = Math.exp(targetLogit - maxLogit) / sumExp;
+          const invP = 1 / prob;
+
+          // Decode token string
+          const decodedText = await tokenizer.decode([targetId]);
+          const displayToken = formatDisplayToken(decodedText);
+
+          tokenDetails.push({
+            id: targetId,
+            display: displayToken,
+            prob: prob,
+            invP: invP
+          });
+
+          // Accumulate -ln(P) for numerically stable perplexity
+          sumNegLogP += -Math.log(prob);
+        }
+
+        // 6. Calculate Perplexity = exp( average of -ln P )
+        const avgNegLogP = sumNegLogP / numTokens;
+        const perplexity = Math.exp(avgNegLogP);
+
+        // 7. Render Section 2: Table & 3 Steps
+        renderSection2(tokenDetails, sumNegLogP, perplexity);
+
+        // 8. Render Section 3: Next Token Predictions
+        // Uses the logits at the very last position (all tokens including the last one)
+        const lastPos = allTokenIds.length - 1;
+        const lastOffset = lastPos * vocabSize;
+        const lastSlice = logitsData.subarray(lastOffset, lastOffset + vocabSize);
+        await renderSection3(lastSlice, vocabSize);
+
+        updateStatus("Model ready.", "ready");
+      } catch (err) {
+        console.error(err);
+        showError(err.message || "An error occurred during inference.");
+      } finally {
+        btnCalculate.disabled = false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Render Section 2 (Table + 3 Steps)
+    // -------------------------------------------------------------------------
+    function renderSection2(tokens, sumNegLogP, perplexity) {
+      section2Placeholder.style.display = "none";
+      section2Content.style.display = "block";
+
+      // Populate Table
+      tokenTableBody.innerHTML = "";
+      tokens.forEach((t, idx) => {
+        const tr = document.createElement("tr");
+        const probPct = (t.prob * 100).toFixed(2);
+        const probFormatted = t.prob < 0.0001 ? t.prob.toExponential(3) : t.prob.toFixed(4);
+        const invPFormatted = t.invP > 99999 ? t.invP.toExponential(2) : t.invP.toFixed(2);
+
+        tr.innerHTML = `
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${idx + 1}</td>
+          <td><span class="token-badge">${escapeHtml(t.display)}</span></td>
+          <td>${probFormatted} <span style="color: var(--text-muted); font-size: 0.85rem;">(${probPct}%)</span></td>
+          <td><strong>${invPFormatted}</strong></td>
+        `;
+        tokenTableBody.appendChild(tr);
+      });
+
+      // Step 1: Multiply all 1/P values
+      // If N <= 6, show all factors. If N > 6, wrap or show first few and last.
+      const invValues = tokens.map((t) => (t.invP > 999 ? t.invP.toExponential(1) : t.invP.toFixed(2)));
+      let multiplicationStr = "";
+      if (invValues.length <= 6) {
+        multiplicationStr = invValues.join(" × ");
+      } else {
+        multiplicationStr = `${invValues.slice(0, 3).join(" × ")} × … × ${invValues.slice(-2).join(" × ")}`;
+      }
+
+      // Compute display product in log-safe way
+      let productDisplay = "";
+      if (sumNegLogP < 700) {
+        const prod = Math.exp(sumNegLogP);
+        productDisplay = prod > 1e6 ? prod.toExponential(3) : prod.toFixed(2);
+      } else {
+        const log10Val = sumNegLogP / Math.LN10;
+        const exp10 = Math.floor(log10Val);
+        const mantissa = Math.pow(10, log10Val - exp10);
+        productDisplay = `${mantissa.toFixed(2)} × 10<sup>${exp10}</sup>`;
+      }
+      step1El.innerHTML = `<strong>${multiplicationStr}</strong> = ${productDisplay}`;
+
+      // Step 2: N = number of tokens
+      step2El.innerHTML = `<strong>N = ${tokens.length}</strong> tokens`;
+
+      // Step 3: Perplexity
+      const perpFormatted = perplexity > 99999 ? perplexity.toExponential(2) : perplexity.toFixed(2);
+      step3El.textContent = perpFormatted;
+    }
+
+    // -------------------------------------------------------------------------
+    // Render Section 3 (Top 8 next tokens)
+    // -------------------------------------------------------------------------
+    async function renderSection3(slice, vocabSize) {
+      section3Placeholder.style.display = "none";
+      section3Content.style.display = "block";
+
+      // 1. Stable softmax for the last logits
+      let maxLogit = -Infinity;
+      for (let i = 0; i < vocabSize; i++) {
+        if (slice[i] > maxLogit) maxLogit = slice[i];
+      }
+      let sumExp = 0;
+      for (let i = 0; i < vocabSize; i++) {
+        sumExp += Math.exp(slice[i] - maxLogit);
+      }
+
+      // 2. Find top 8 token IDs by logit
+      const topK = [];
+      const K = 8;
+      for (let i = 0; i < vocabSize; i++) {
+        const val = slice[i];
+        if (topK.length < K) {
+          topK.push({ id: i, logit: val });
+          topK.sort((a, b) => b.logit - a.logit);
+        } else if (val > topK[K - 1].logit) {
+          topK[K - 1] = { id: i, logit: val };
+          topK.sort((a, b) => b.logit - a.logit);
+        }
+      }
+
+      // 3. Build UI rows
+      predictionsList.innerHTML = "";
+      for (let rank = 0; rank < topK.length; rank++) {
+        const item = topK[rank];
+        const prob = Math.exp(item.logit - maxLogit) / sumExp;
+        const pct = (prob * 100).toFixed(1);
+        const rawToken = await tokenizer.decode([item.id]);
+        const displayToken = formatDisplayToken(rawToken);
+
+        const isTop = rank === 0;
+        const row = document.createElement("div");
+        row.className = `pred-row ${isTop ? "top-prediction" : ""}`;
+        row.innerHTML = `
+          <div class="pred-rank">${isTop ? "★ 1" : `#${rank + 1}`}</div>
+          <div class="pred-token"><span class="token-badge">${escapeHtml(displayToken)}</span></div>
+          <div class="pred-bar-track">
+            <div class="pred-bar-fill" style="width: ${Math.min(100, Math.max(1, pct))}%;"></div>
+          </div>
+          <div class="pred-pct">${pct}%</div>
+        `;
+        predictionsList.appendChild(row);
+      }
+    }
+
+    // Helper: Escape HTML characters for safe table insertion
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // -------------------------------------------------------------------------
+    // SECTION 4: TRY IT BY HAND (SIMULATED)
+    // -------------------------------------------------------------------------
+    const manualRowsContainer = document.getElementById("manual-rows-container");
+    const manualTableBody = document.getElementById("manual-table-body");
+    const manualStep1 = document.getElementById("manual-step-1");
+    const manualStep2 = document.getElementById("manual-step-2");
+    const manualStep3 = document.getElementById("manual-step-3");
+    const btnAddToken = document.getElementById("btn-add-token");
+
+    // Section 4 Presets
+    const PRESETS = {
+      python: [
+        { token: "I", prob: 0.5 },
+        { token: "love", prob: 0.8 },
+        { token: "Python", prob: 0.2 }
+      ],
+      eighths: [
+        { token: "token 1", prob: 0.125 },
+        { token: "token 2", prob: 0.125 },
+        { token: "token 3", prob: 0.125 },
+        { token: "token 4", prob: 0.125 },
+        { token: "token 5", prob: 0.125 },
+        { token: "token 6", prob: 0.125 },
+        { token: "token 7", prob: 0.125 },
+        { token: "token 8", prob: 0.125 }
+      ],
+      surprise: [
+        { token: "The", prob: 0.9 },
+        { token: "dog", prob: 0.9 },
+        { token: "barked", prob: 0.9 },
+        { token: "meow", prob: 0.01 }
+      ]
+    };
+
+    // Load a preset into Section 4
+    function loadManualPreset(presetKey) {
+      const items = PRESETS[presetKey];
+      if (!items) return;
+      manualRowsContainer.innerHTML = "";
+      items.forEach((item) => addManualRow(item.token, item.prob));
+      updateManualPerplexity();
+    }
+
+    // Add a single editable row
+    function addManualRow(tokenText = "word", probVal = 0.5) {
+      const row = document.createElement("div");
+      row.className = "manual-row";
+      row.innerHTML = `
+        <input type="text" class="manual-token-input" value="${escapeHtml(tokenText)}" placeholder="Token name">
+        <input type="number" class="manual-prob-input" value="${probVal}" step="any" min="0.000001" max="1" placeholder="P (0 to 1)">
+        <button type="button" class="btn btn-remove" title="Remove token">✕</button>
+      `;
+
+      // Live updates as the user types
+      row.querySelector(".manual-token-input").addEventListener("input", updateManualPerplexity);
+      row.querySelector(".manual-prob-input").addEventListener("input", updateManualPerplexity);
+      row.querySelector(".btn-remove").addEventListener("click", () => {
+        row.remove();
+        updateManualPerplexity();
+      });
+
+      manualRowsContainer.appendChild(row);
+    }
+
+    // Compute and update Section 4 table and steps live
+    function updateManualPerplexity() {
+      const rowEls = manualRowsContainer.querySelectorAll(".manual-row");
+      const tokens = [];
+      let sumNegLogP = 0;
+
+      rowEls.forEach((row) => {
+        const tokenStr = row.querySelector(".manual-token-input").value || "(empty)";
+        const probNum = parseFloat(row.querySelector(".manual-prob-input").value);
+        if (!isNaN(probNum) && probNum > 0) {
+          const clampedProb = Math.min(probNum, 1);
+          const invP = 1 / clampedProb;
+          tokens.push({
+            display: tokenStr,
+            prob: clampedProb,
+            invP: invP
+          });
+          sumNegLogP += -Math.log(clampedProb);
+        }
+      });
+
+      manualTableBody.innerHTML = "";
+
+      if (tokens.length === 0) {
+        manualStep1.innerHTML = "<em>Add at least one token with probability > 0</em>";
+        manualStep2.innerHTML = "<strong>N = 0</strong>";
+        manualStep3.textContent = "--";
+        return;
+      }
+
+      // Populate Table
+      tokens.forEach((t, idx) => {
+        const tr = document.createElement("tr");
+        const probPct = (t.prob * 100).toFixed(2);
+        const probFormatted = t.prob.toFixed(4);
+        const invPFormatted = t.invP.toFixed(3);
+
+        tr.innerHTML = `
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${idx + 1}</td>
+          <td><span class="token-badge">${escapeHtml(t.display)}</span></td>
+          <td>${probFormatted} <span style="color: var(--text-muted); font-size: 0.85rem;">(${probPct}%)</span></td>
+          <td><strong>${invPFormatted}</strong></td>
+        `;
+        manualTableBody.appendChild(tr);
+      });
+
+      // Calculate Perplexity = exp(average of -ln P)
+      const N = tokens.length;
+      const avgNegLogP = sumNegLogP / N;
+      const perplexity = Math.exp(avgNegLogP);
+
+      // Step 1: Multiplication string
+      const invStrings = tokens.map((t) => t.invP.toFixed(3));
+      const multExpr = invStrings.length <= 6 
+        ? invStrings.join(" × ") 
+        : `${invStrings.slice(0, 3).join(" × ")} × … × ${invStrings.slice(-2).join(" × ")}`;
+
+      let productDisplay = "";
+      if (sumNegLogP < 700) {
+        const prod = Math.exp(sumNegLogP);
+        productDisplay = prod > 1e6 ? prod.toExponential(3) : prod.toFixed(3);
+      } else {
+        const log10Val = sumNegLogP / Math.LN10;
+        const exp10 = Math.floor(log10Val);
+        const mantissa = Math.pow(10, log10Val - exp10);
+        productDisplay = `${mantissa.toFixed(2)} × 10<sup>${exp10}</sup>`;
+      }
+      manualStep1.innerHTML = `<strong>${multExpr}</strong> = ${productDisplay}`;
+
+      // Step 2: N
+      manualStep2.innerHTML = `<strong>N = ${N}</strong> tokens`;
+
+      // Step 3: Perplexity
+      // Display cleanly (e.g., 2.32, 8.00)
+      manualStep3.textContent = (Math.abs(perplexity - Math.round(perplexity)) < 1e-6) 
+        ? Math.round(perplexity).toString() 
+        : perplexity.toFixed(2);
+    }
+
+    // -------------------------------------------------------------------------
+    // Event Listeners Initialization
+    // -------------------------------------------------------------------------
+    // Section 1: Calculate button
+    btnCalculate.addEventListener("click", calculateModelPerplexity);
+
+    // Section 1: Sample buttons fill input & trigger calculation
+    document.getElementById("sample-1").addEventListener("click", () => {
+      sentenceInput.value = "I love Python";
+      calculateModelPerplexity();
+    });
+    document.getElementById("sample-2").addEventListener("click", () => {
+      sentenceInput.value = "Python love I";
+      calculateModelPerplexity();
+    });
+    document.getElementById("sample-3").addEventListener("click", () => {
+      sentenceInput.value = "The capital of France is Paris";
+      calculateModelPerplexity();
+    });
+
+    // Enter key in sentence input calculates
+    sentenceInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calculateModelPerplexity();
+    });
+
+    // Section 4: Add token button & Presets
+    btnAddToken.addEventListener("click", () => {
+      addManualRow(`token ${manualRowsContainer.children.length + 1}`, 0.5);
+      updateManualPerplexity();
+    });
+
+    document.getElementById("preset-python").addEventListener("click", () => loadManualPreset("python"));
+    document.getElementById("preset-eighths").addEventListener("click", () => loadManualPreset("eighths"));
+    document.getElementById("preset-surprise").addEventListener("click", () => loadManualPreset("surprise"));
+
+    // Initialize Section 4 with "I love Python" preset on page load
+    loadManualPreset("python");
+  </script>
+</body>
+</html>
